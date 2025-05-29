@@ -27,3 +27,5 @@ Each effects consists of two files.
 ***
 ### Notes
 `AcomputeShaderResources` created using the `.acompute` import can not be quick loaded. In that case just drag and drop the file into the exported field.
+
+![thumbnail](Misc/readmeThumbnail.png "Simple example using a Vignette & Outline effect together")
