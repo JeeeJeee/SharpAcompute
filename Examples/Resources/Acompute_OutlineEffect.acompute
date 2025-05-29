@@ -1,0 +1,68 @@
+#kernel OutlineEffect
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D _RenderTarget;
+layout(set = 0, binding = 1) uniform UniformBufferObject
+{
+	float _OutlineThickness;
+	float _DepthDistance;
+	float _OutlineBias;
+	bool _OnlyOutlines;
+};
+
+layout(set = 1, binding = 0) uniform sampler2D _depthTexture;
+
+layout(push_constant, std430) uniform Params
+{
+	vec2 screen_size;
+	float inv_proj_2w;
+	float inv_proj_3w;
+} p;
+
+float GetLinearDepth(ivec2 uv)
+{
+    float depth = texelFetch(_depthTexture, uv, 0).r;
+    float linear_depth = 1.0 / (depth * p.inv_proj_2w + p.inv_proj_3w);
+	linear_depth = clamp(linear_depth / _DepthDistance, 0.0, 1.0);
+
+	return linear_depth;
+}
+
+[numthreads(8, 8, 1)]
+void OutlineEffect()
+{
+	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
+	vec2 screenUV = uv / p.screen_size;
+	vec2 texelSize = 1.0 / p.screen_size;
+
+    vec3 color = imageLoad(_RenderTarget, uv).rgb;
+
+	ivec2 uvOffsets[4];
+	int easy = int(_OutlineThickness);
+	uvOffsets[0] = uv + ivec2(0.0, -easy);
+	uvOffsets[1] = uv + ivec2(0.0, easy);
+	uvOffsets[2] = uv + ivec2(easy, 0.0);
+	uvOffsets[3] = uv + ivec2(-easy, 0.0);
+
+	float depthDifference = 0.0;
+	float linearDepth = GetLinearDepth(uv);
+	
+	for(int i = 0; i < uvOffsets.length(); i++)
+	{
+		float dOff = GetLinearDepth(uvOffsets[i]);
+		depthDifference += clamp(dOff - linearDepth, 0.0, 1.0);
+	}
+	
+	depthDifference = smoothstep(_OutlineBias, 0.35, depthDifference);
+	depthDifference = sign(depthDifference);
+	
+	color += depthDifference;
+	
+	if(_OnlyOutlines == true)
+	{
+		imageStore(_RenderTarget, uv, vec4(depthDifference, 0.0, 0.0, 1.0));	
+	}
+	else
+	{
+		imageStore(_RenderTarget, uv, vec4(color, 1.0));
+	}
+}

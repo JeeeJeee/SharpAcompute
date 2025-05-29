@@ -1,0 +1,15 @@
+[remap]
+
+importer="SharpAcompute.plugin"
+type="AcomputeShaderResource"
+uid="uid://tm2mmt37w2w0"
+path="res://.godot/imported/Acompute_VignetteEffect.acompute-77d63d3a54d8aa21cb0e2fe68c5d0de1.tres"
+
+[deps]
+
+source_file="res://addons/SharpAcompute/Examples/Resources/Acompute_VignetteEffect.acompute"
+dest_files=["res://.godot/imported/Acompute_VignetteEffect.acompute-77d63d3a54d8aa21cb0e2fe68c5d0de1.tres"]
+
+[params]
+
+myOption=false

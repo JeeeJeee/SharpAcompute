@@ -1,0 +1,26 @@
+#kernel VignetteEffect
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D _RenderTarget;
+
+layout(binding = 1) uniform UniformBufferObject {
+	float _VignetteStrength;
+};
+
+layout(push_constant, std430) uniform Params {
+	vec2 screen_size;
+};
+
+[numthreads(8, 8, 1)]
+void VignetteEffect() {
+	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
+	vec2 screenUV = uv / screen_size;
+	
+    vec3 color = imageLoad(_RenderTarget, uv).rgb;
+    vec2 vignetteUV = screenUV * (1.0 - screenUV.yx);
+    float vignette = vignetteUV.x * vignetteUV.y * 1.0f;
+	vignette = pow(vignette, _VignetteStrength);
+	color *= vignette;
+	
+	
+	imageStore(_RenderTarget, uv, vec4(color, 1.0));
+}

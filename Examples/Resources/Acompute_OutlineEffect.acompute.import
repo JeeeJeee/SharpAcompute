@@ -1,0 +1,15 @@
+[remap]
+
+importer="SharpAcompute.plugin"
+type="AcomputeShaderResource"
+uid="uid://brncaybvjcrs3"
+path="res://.godot/imported/Acompute_OutlineEffect.acompute-dee6c2a4f09bb90d462ca24e69b1229e.tres"
+
+[deps]
+
+source_file="res://addons/SharpAcompute/Examples/Resources/Acompute_OutlineEffect.acompute"
+dest_files=["res://.godot/imported/Acompute_OutlineEffect.acompute-dee6c2a4f09bb90d462ca24e69b1229e.tres"]
+
+[params]
+
+myOption=false

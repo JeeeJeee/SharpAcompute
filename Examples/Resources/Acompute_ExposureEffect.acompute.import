@@ -1,0 +1,15 @@
+[remap]
+
+importer="SharpAcompute.plugin"
+type="AcomputeShaderResource"
+uid="uid://decyu5mf62dt1"
+path="res://.godot/imported/Acompute_ExposureEffect.acompute-27b6bd73044d30a0830b79f0afa26a4d.tres"
+
+[deps]
+
+source_file="res://addons/SharpAcompute/Examples/Resources/Acompute_ExposureEffect.acompute"
+dest_files=["res://.godot/imported/Acompute_ExposureEffect.acompute-27b6bd73044d30a0830b79f0afa26a4d.tres"]
+
+[params]
+
+myOption=false
