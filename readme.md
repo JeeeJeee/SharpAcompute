@@ -1,5 +1,6 @@
 ﻿# SharpAcompute
-A C# godot plugin implementation of [Acerolas Acompute](https://github.com/GarrettGunnell/Acerola-Compute) that makes working with the new `EffectCompositor` _slightly_ less painful.
+A C# godot plugin implementation of [Acerolas Acompute](https://github.com/GarrettGunnell/Acerola-Compute) that makes working with the new `EffectCompositor` _slightly_ less painful.  
+Tested in Godot version 4.4-mono
 ***
 - Features a GLSL compute shader wrapper language called `Acompute`.
 - Several wrappers to make creating EffectCompositor effects simpler
