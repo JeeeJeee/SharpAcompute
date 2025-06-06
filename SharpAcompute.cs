@@ -13,11 +13,13 @@ public partial class SharpAcompute : EditorPlugin
 	public override void _EnablePlugin()
 	{
 		AddAutoloadSingleton("AcomputeShaderCompiler", "res://addons/SharpAcompute/ShaderCompiler/AcomputeShaderCompiler.cs");
+		ProjectSettings.Save();
 	}
 	
 	public override void _DisablePlugin()
 	{
 		RemoveAutoloadSingleton("AcomputeShaderCompiler");
+		ProjectSettings.Save();
 	}
 
 	public override void _EnterTree()

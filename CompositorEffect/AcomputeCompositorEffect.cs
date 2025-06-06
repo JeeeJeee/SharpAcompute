@@ -1,4 +1,5 @@
-﻿using Godot;
+﻿using System.Threading.Tasks;
+using Godot;
 using SharpAcompute.ShaderCompiler;
 using SharpAcompute.Resources;
 
@@ -33,7 +34,7 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
             _acomputeShaderResource = value;
             _acomputeShaderResource.ResourceChanged += OnShaderResourceModified;
             
-            InitializeCompositorEffect(_acomputeShaderResource);
+            _ = InitializeCompositorEffect(_acomputeShaderResource);
         }
     }
     private AcomputeShaderResource _acomputeShaderResource;
@@ -41,26 +42,22 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
     protected Vector2I SceneBuffersInternalSize;
     protected RenderSceneBuffersRD RenderSceneBuffersRd;
 
-    private void InitializeCompositorEffect(AcomputeShaderResource shaderResource)
+    private async Task InitializeCompositorEffect(AcomputeShaderResource shaderResource)
     {
-        // In the editor the plugin will autoload the shader compiler.
-        // In an exported game there is no such autoload, so we load it here instead
-        if (AcomputeShaderCompiler.Instance == null)
+        while (AcomputeShaderCompiler.Instance == null)
         {
-            AcomputeShaderCompiler shaderCompiler = new AcomputeShaderCompiler();
-            shaderCompiler.Ready += () => { InitializeCompositorEffect(AcomputeShaderResource); }; 
-            ((SceneTree)Engine.GetMainLoop()).GetRoot().AddChild(shaderCompiler);
-            return;
+            await Task.Delay(100);
         }
 
         if (AcomputeShaderCompiler.Instance.GetComputeKernelCompilations(shaderResource, out Rid[] kernelCompilations))
         {
             AcomputeShaderInstance = new AcomputeShaderInstance(kernelCompilations);
             InitEffect();
-            return;
         }
-
-        AcomputeShaderInstance = null;
+        else
+        {
+            AcomputeShaderInstance = null;
+        }
     }
 
     /// <summary>
