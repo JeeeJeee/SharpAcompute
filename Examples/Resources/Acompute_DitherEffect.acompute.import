@@ -1,0 +1,15 @@
+[remap]
+
+importer="SharpAcompute.plugin"
+type="AcomputeShaderResource"
+uid="uid://cu6a7pqp1urrd"
+path="res://.godot/imported/Acompute_DitherEffect.acompute-f2fcf5be8218c5d3b400c97f16f6a42d.tres"
+
+[deps]
+
+source_file="res://addons/SharpAcompute/Examples/Resources/Acompute_DitherEffect.acompute"
+dest_files=["res://.godot/imported/Acompute_DitherEffect.acompute-f2fcf5be8218c5d3b400c97f16f6a42d.tres"]
+
+[params]
+
+myOption=false

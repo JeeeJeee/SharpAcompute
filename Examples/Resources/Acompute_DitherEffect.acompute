@@ -1,0 +1,50 @@
+#kernel main
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D _RenderTarget;
+layout(binding = 1) uniform UniformBufferObject 
+{
+	float _DitherStrength;
+	float _NumColors;
+	float _DitherSize;
+};
+
+layout(push_constant, std430) uniform Params 
+{
+	vec2 raster_size;
+};
+
+// 4x4 Bayer matrix used by the dither
+const mat4 bayer4x4 = mat4(
+	vec4(0.0, 0.5333333333, 0.1333333333,  0.6666666667),
+	vec4(0.8, 0.2666666667, 0.9333333333,  0.4),
+	vec4(0.2, 0.7333333333, 0.06666666667, 0.6),
+	vec4(1.0, 0.4666666667, 0.8666666667,  0.3333333333)
+);
+
+float DitherValue(float value, ivec2 pixelPos)
+{
+	float v2 = value;
+	v2 *= float(_NumColors);
+	float floorValue = floor(v2);
+	
+	float delta = v2 - floorValue;
+	float edge = bayer4x4[pixelPos.x % 4][pixelPos.y % 4];
+	
+	return (floorValue + step(edge,delta)) / float(_NumColors);
+}
+
+[numthreads(8, 8, 1)]
+void main() 
+{
+	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 size = ivec2(raster_size);
+	vec2 screen_uv = uv / size;
+	
+	vec3 screenColor = imageLoad(_RenderTarget, uv).rgb;
+	
+	float d = DitherValue(screenColor.r, uv / int(_DitherSize));
+    
+	vec3 finalColor = mix(screenColor, vec3(d), _DitherStrength);
+	
+	imageStore(_RenderTarget, uv, vec4(finalColor , 1.0));
+}
