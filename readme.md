@@ -1,7 +1,7 @@
 ﻿# SharpAcompute
-## Word of warning:  
-_The plugin is currently at version 0.1; in active development, and has several problems. Most notably with C# assemblies not being correctly unloaded leading to problems with hotreloading.  
-This adds a lot of overhead to development time and I do not recommend using the plugin for larger project until its fixed. That said; this plugin is somehow **still** an improvement on the usability of `EffectCompositor` so I hope that you who are reading this can help with issues or pray to the Godot gods that the developers spend more time making the workflow signficantly better._
+
+_The plugin is currently at version 0.6. I will consider upgrading it to 1.0 when more people have tested it to make sure there aren't any major bugs.  
+Hot-Reloading is now also supported!*_
 ***
 
 A C# godot plugin implementation of [Acerolas Acompute](https://github.com/GarrettGunnell/Acerola-Compute) that makes working with the new `EffectCompositor` _slightly_ less painful.  
@@ -12,6 +12,8 @@ Tested in Godot version 4.4-mono
 - Hot reloading of shaders
 - Memory management of created shaders
 - Some examples
+
+![thumbnail](Misc/readmeThumbnail.png "Simple example using a Vignette & Outline effect together")
 
 ***
 ### Installation:
@@ -31,7 +33,5 @@ Each effects consists of two files.
 2. ### AcomputeCompositorEffect
     Create a new class inheriting from `AcomputeCompositorEffect`. Set up all your logic here that will be dispatched to the `AcomputeShaderResource`. Refer to the examples for more info.
 ***
-### Notes
-`AcomputeShaderResources` created using the `.acompute` import can not be quick loaded. In that case just drag and drop the file into the exported field.
-
-![thumbnail](Misc/readmeThumbnail.png "Simple example using a Vignette & Outline effect together")
+#### Example notes:
+`AcomputeShaderResources` created using the `.acompute` import can not be quick loaded **if they are in the addons folder**. In that case just drag and drop the file into the exported field.

@@ -8,14 +8,30 @@ using Godot;
 namespace SharpAcompute.ShaderCompiler;
 
 [Tool]
-public partial class AcomputeShaderCompiler : Node
+public partial class AcomputeShaderCompiler : Node, ISerializationListener
 {
     private RenderingDevice _rd;
     private Dictionary<AcomputeShaderResource, Rid[]> _computeShaderKernelCompilations = new();
     
+    public List<AcomputeShaderInstance> ShaderInstances = new();
+    
     public static AcomputeShaderCompiler Instance { get; private set; }
     
     public override void _Ready()
+    {
+        GD.Print("SharpAcompute: Ready.");
+        InitShaderCompiler();
+    }
+
+    // Called on hotreload
+    private AcomputeShaderCompiler()
+    {
+        GD.Print("SharpAcompute: Hotreload Triggered");
+        InternalFree();
+        InitShaderCompiler();
+    }
+
+    private void InitShaderCompiler()
     {
         _rd = RenderingServer.GetRenderingDevice();
         Instance = this;
@@ -35,10 +51,6 @@ public partial class AcomputeShaderCompiler : Node
             return [];
         }
         
-        string computeShaderName = GetShaderName(computeShaderResource);
-        
-        GD.Print("Compiling compute shader: " + computeShaderName);
-
         string rawShaderCodeString = computeShaderResource.SourceCode;
 
         Span<string> lines = rawShaderCodeString.Split('\n');
@@ -186,7 +198,7 @@ public partial class AcomputeShaderCompiler : Node
             compiledKernels.Add(shaderHandle);
         }
         
-        GD.Print($"Compute shader {computeShaderResource.GetPath()} compiled successfully.");
+        GD.Print($"Acompute shader: {computeShaderResource.GetPath()} : Compiled successfully!");
         
         return compiledKernels.ToArray();
     }
@@ -216,10 +228,15 @@ public partial class AcomputeShaderCompiler : Node
     {
         if (_computeShaderKernelCompilations.TryGetValue(shaderResource, out Rid[] kernelCompilations))
         {
-            foreach (Rid kernel in kernelCompilations)
+            for (var index = 0; index < kernelCompilations.Length; index++)
             {
-                if(kernel.IsValid) { _rd.FreeRid(kernel); }
+                if (kernelCompilations[index].IsValid)
+                {
+                    _rd.FreeRid(kernelCompilations[index]);
+                    kernelCompilations[index] = default;
+                }
             }
+
             _computeShaderKernelCompilations.Remove(shaderResource);
         }
     }
@@ -242,30 +259,54 @@ public partial class AcomputeShaderCompiler : Node
         outKernelCompilations = compiledShaders;
         return true;
     }
-
-    // @TODO: Might have to move all Rids created by shader instances to here so they are actually freed.
-    // @TODO: ShaderInstances are tied to resources and those don't get a Predelete notification
-    public List<Rid> EffectRids = new();
     
-    public List<AcomputeShaderInstance> ShaderInstances = new();
     public override void _Notification(int what)
     {
         if (what == NotificationPredelete)
         {
-            foreach (var computeShader in _computeShaderKernelCompilations.Values)
-            {
-                foreach (var kernel in computeShader)
-                {
-                    if(kernel.IsValid) { _rd.FreeRid(kernel); }
-                }
-            }
-
-            foreach (var shit in EffectRids)
-            {
-                if(shit.IsValid) { _rd.FreeRid(shit); }
-            }
-            
-            GD.Print("SharpAcompute: Freeing compute shaders.");
+            InternalFree();
         }
     }
+
+    private void InternalFree()
+    {
+        foreach (var computeShader in _computeShaderKernelCompilations.Values)
+        {
+            for (var index = 0; index < computeShader.Length; index++)
+            {
+                var kernel = computeShader[index];
+                if (kernel.IsValid)
+                {
+                    _rd.FreeRid(kernel);
+                    kernel = default;
+                }
+            }
+        }
+        
+        ShaderInstances.ForEach(x => x.Free());
+        
+        ShaderInstances.Clear();
+        _computeShaderKernelCompilations.Clear();
+        
+        GD.Print("SharpAcompute: Compute Shaders freed.");
+    }
+    
+    public void OnBeforeSerialize()
+    {
+        // Makes sure that we clear the RIDs BEFORE we are reloading, otherwise they leak
+        // Can't call the InternalFree method from here because some of the frees are handled by their own objects when reloaded and it would cause errors.
+        foreach (var computeShader in _computeShaderKernelCompilations.Values)
+        {
+            for (var index = 0; index < computeShader.Length; index++)
+            {
+                var kernel = computeShader[index];
+                if (kernel.IsValid)
+                {
+                    _rd.FreeRid(kernel);
+                    kernel = default;
+                }
+            }
+        }
+    }
+    public void OnAfterDeserialize() {}
 }

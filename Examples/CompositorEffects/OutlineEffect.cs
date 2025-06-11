@@ -16,19 +16,10 @@ public partial class OutlineEffect : AcomputeCompositorEffect
     
     private Rid _depthSampler;
     
-    /// <summary>
-    /// Any new RIDs that the effect creates must be tracked by the ShaderCompiler.
-    /// The shader compiler is guaranteed to be ready when this function is called 
-    /// </summary>
     protected override void InitEffect()
     {
-        RDSamplerState samplerState = new RDSamplerState();
-        samplerState.MinFilter = RenderingDevice.SamplerFilter.Linear;
-        samplerState.MagFilter = RenderingDevice.SamplerFilter.Linear;
-        _depthSampler = Rd.SamplerCreate(samplerState);
-        
-        // Add the sampler to the list of resources that need to be cleared on exit
-        AcomputeShaderCompiler.Instance.EffectRids.Add(_depthSampler);
+        _depthSampler = AcomputeShaderInstance.CreateSampler(RenderingDevice.SamplerFilter.Nearest,
+            RenderingDevice.SamplerFilter.Nearest);
     }
 
     public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)

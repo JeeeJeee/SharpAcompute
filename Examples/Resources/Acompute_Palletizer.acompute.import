@@ -1,0 +1,15 @@
+[remap]
+
+importer="SharpAcompute.plugin"
+type="AcomputeShaderResource"
+uid="uid://crwdbathmjx0r"
+path="res://.godot/imported/Acompute_Palletizer.acompute-42430c9227f28cde7d7e45e1529579bf.tres"
+
+[deps]
+
+source_file="res://addons/SharpAcompute/Examples/Resources/Acompute_Palletizer.acompute"
+dest_files=["res://.godot/imported/Acompute_Palletizer.acompute-42430c9227f28cde7d7e45e1529579bf.tres"]
+
+[params]
+
+myOption=false

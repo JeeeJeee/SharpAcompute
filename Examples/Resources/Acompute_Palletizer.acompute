@@ -1,0 +1,68 @@
+#kernel Palettization
+
+layout(rgba16f, set = 0, binding = 0) uniform image2D _RenderTarget;
+layout(set = 0, binding = 1) uniform sampler2D _PaletteTexture;
+
+layout(set = 0, binding = 2) uniform UniformBufferObject 
+{
+	float _EffectStrength;
+};
+
+layout(push_constant, std430) uniform Params 
+{
+	vec2 raster_size;
+};
+
+vec3 colors[512];
+int numColors = 0; // Should be the amount of colors actually defined in the array
+
+
+[numthreads(8, 8, 1)]
+void Palettization()
+{
+	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
+	vec2 screenUV = uv / raster_size;
+	vec2 texelSize = 1.0 / raster_size;
+
+	ivec2 paletteSize = textureSize(_PaletteTexture, 0);
+	vec3 screenColor = imageLoad(_RenderTarget, uv).rgb;
+
+	float minColorDistance = 10000.0;
+	vec3 closestColor = vec3(0.0);
+	
+	vec3 texTest = texture(_PaletteTexture, screenUV).rgb;
+
+	if(paletteSize.x > 1)
+	{
+		for(int i = 0; i < paletteSize.x; i++)
+		{
+			vec2 paletteUV = vec2(float(i) / float(paletteSize.x), 0.0);
+			vec3 paletteColor = texture(_PaletteTexture, paletteUV).rgb;
+			float colorDistance = distance(paletteColor, screenColor);
+			if(colorDistance < minColorDistance)
+			{
+				minColorDistance = colorDistance;
+				closestColor = paletteColor;
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < numColors; i++)
+		{
+			float colorDistance = distance(colors[i], screenColor);
+			if(colorDistance < minColorDistance)
+			{
+				minColorDistance = colorDistance;
+				closestColor = colors[i];
+			}
+		}
+	}
+
+
+	// vec3 finalCol = vec3((paletteSize.x / texelSize.r) / 256.0);
+	vec3 finalCol = mix(screenColor, closestColor, _EffectStrength);
+	// vec3 finalCol = texTest;
+	// vec3 finalCol = vec3(screenUV.x, screenUV.y, 0.0);
+	imageStore(_RenderTarget, uv, vec4(finalCol, 1.0));
+}

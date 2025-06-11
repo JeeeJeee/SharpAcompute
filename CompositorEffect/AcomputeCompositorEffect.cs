@@ -9,8 +9,36 @@ namespace SharpAcompute.CompositorEffect;
 public partial class AcomputeCompositorEffect : Godot.CompositorEffect
 {
     protected RenderingDevice Rd = RenderingServer.GetRenderingDevice();
-    
-    protected AcomputeShaderInstance AcomputeShaderInstance { get; set; }
+
+    // Parameterless constructor is needed for hot-reload, otherwise we get a crash
+    public AcomputeCompositorEffect() {}
+
+    protected AcomputeShaderInstance AcomputeShaderInstance
+    {
+        get => _acomputeShaderInstance;
+        set
+        {
+            if (value == _acomputeShaderInstance)
+            {
+                return;
+            }
+            
+            if (value == null)
+            {
+                _acomputeShaderInstance?.Free();
+                _acomputeShaderInstance = null;
+                return;
+            }
+
+            if (value != _acomputeShaderInstance)
+            {
+                _acomputeShaderInstance?.Free();
+            }
+            
+            _acomputeShaderInstance = value;
+        }
+    }
+    private AcomputeShaderInstance _acomputeShaderInstance;
 
     [Export]
     public AcomputeShaderResource AcomputeShaderResource
@@ -18,7 +46,10 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
         get => _acomputeShaderResource;
         set
         {
-            if(value == _acomputeShaderResource) { return; }
+            if (value == _acomputeShaderResource)
+            {
+                return;
+            }
             
             if (value == null)
             {
@@ -34,21 +65,31 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
             _acomputeShaderResource = value;
             _acomputeShaderResource.ResourceChanged += OnShaderResourceModified;
             
-            _ = InitializeCompositorEffect(_acomputeShaderResource);
+            // When hot-reloading C# tool scripts godot calls all property setters. It does this in a random order so we use CallDeferred to make sure other files that were hot-reloaded have actually done so
+            CallDeferred(nameof(HotReloadEffect));
         }
     }
     private AcomputeShaderResource _acomputeShaderResource;
     
     protected Vector2I SceneBuffersInternalSize;
     protected RenderSceneBuffersRD RenderSceneBuffersRd;
-
-    private async Task InitializeCompositorEffect(AcomputeShaderResource shaderResource)
+    
+    public async void HotReloadEffect()
     {
+        if (AcomputeShaderResource != null)
+        {
+            await InitializeCompositorEffect(_acomputeShaderResource);   
+        }
+    }
+    
+    private Task InitializeCompositorEffect(AcomputeShaderResource shaderResource)
+    {
+        // In a deployed game the compositor effects may be ready before the autload is. In that case we wait here
         while (AcomputeShaderCompiler.Instance == null)
         {
-            await Task.Delay(100);
+            Task.Delay(500);
         }
-
+    
         if (AcomputeShaderCompiler.Instance.GetComputeKernelCompilations(shaderResource, out Rid[] kernelCompilations))
         {
             AcomputeShaderInstance = new AcomputeShaderInstance(kernelCompilations);
@@ -58,10 +99,14 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
         {
             AcomputeShaderInstance = null;
         }
+    
+        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Override this function and do your setup there
+    /// This function acts as the constructor for anything to do with RIDs
+    /// Keep in mind that this function will be called in the editor since compositor effects are Tool scripts.
+    /// So more complicated interactions with the scene tree might fail in the editor
     /// </summary>
     protected virtual void InitEffect() { }
     
@@ -99,21 +144,21 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
 
         if (Rd == null)
         {
-            GD.PrintErr("Rendering device is null");
+            GD.PrintErr("Rendering device is null!");
             return;
         }
-
+        
         RenderSceneBuffersRd = renderData.GetRenderSceneBuffers() as RenderSceneBuffersRD;
         if (RenderSceneBuffersRd == null)
         {
-            GD.PrintErr("No render scene buffers found");
+            GD.PrintErr("No render scene buffers found!");
             return;
         }
-
+        
         SceneBuffersInternalSize = RenderSceneBuffersRd.GetInternalSize();
         if (SceneBuffersInternalSize.X == 0 || SceneBuffersInternalSize.Y == 0)
         {
-            GD.PrintErr("Rendering to 0x0 buffer");
+            GD.PrintErr("Rendering to 0x0 buffer!");
             return;
         }
         
