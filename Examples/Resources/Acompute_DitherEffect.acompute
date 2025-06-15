@@ -1,4 +1,4 @@
-#kernel main
+#kernel Dither
 
 layout(rgba16f, set = 0, binding = 0) uniform image2D _RenderTarget;
 layout(binding = 1) uniform UniformBufferObject 
@@ -6,6 +6,7 @@ layout(binding = 1) uniform UniformBufferObject
 	float _DitherStrength;
 	float _NumColors;
 	float _DitherSize;
+	bool _UseGrayscaleDither;
 };
 
 layout(push_constant, std430) uniform Params 
@@ -23,28 +24,37 @@ const mat4 bayer4x4 = mat4(
 
 float DitherValue(float value, ivec2 pixelPos)
 {
-	float v2 = value;
-	v2 *= float(_NumColors);
-	float floorValue = floor(v2);
+	value *= float(_NumColors);
+	float floorValue = floor(value);
 	
-	float delta = v2 - floorValue;
+	float delta = value - floorValue;
 	float edge = bayer4x4[pixelPos.x % 4][pixelPos.y % 4];
 	
 	return (floorValue + step(edge,delta)) / float(_NumColors);
 }
 
 [numthreads(8, 8, 1)]
-void main() 
+void Dither() 
 {
 	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
 	ivec2 size = ivec2(raster_size);
 	vec2 screen_uv = uv / size;
 	
 	vec3 screenColor = imageLoad(_RenderTarget, uv).rgb;
+	ivec2 ditherCoords = uv / int(_DitherSize);
+		
+	float dr = DitherValue(screenColor.r, ditherCoords );
+	float dg = DitherValue(screenColor.g, ditherCoords );
+	float db = DitherValue(screenColor.b, ditherCoords );
+	vec3 colorDither = vec3(dr, dg, db);
 	
-	float d = DitherValue(screenColor.r, uv / int(_DitherSize));
-    
-	vec3 finalColor = mix(screenColor, vec3(d), _DitherStrength);
-	
+	vec3 finalColor = mix(screenColor, colorDither, _DitherStrength);
+	if(_UseGrayscaleDither)
+	{
+	    vec3 lum = vec3(0.299, 0.587, 0.114);
+		float grayscale = dot(lum, screenColor);
+		float grayscaleDither = DitherValue(grayscale, ditherCoords);
+		finalColor = mix(screenColor, vec3(grayscaleDither), _DitherStrength);
+	}
 	imageStore(_RenderTarget, uv, vec4(finalColor , 1.0));
 }

@@ -110,7 +110,8 @@ public partial class AcomputeShaderCompiler : Node, ISerializationListener
             string line = lines[i];
             foreach (string kernelName in kernelNames)
             {
-                if (line.Contains(kernelName) && line.Contains("void"))
+                // if (line.Contains(kernelName) && line.Contains("void"))
+                if(line.StartsWith("void " + kernelName + "()"))
                 {
                     if (i == 0)
                     {
@@ -163,13 +164,20 @@ public partial class AcomputeShaderCompiler : Node, ISerializationListener
             // strip threadgroup lines in original code string
             for (int i = lineIndex; i < lines.Length; i++)
             {
-                string modifiedLine = lines[i].Replace(kernelName, "main");
                 if (linesToRemove.Contains(i))
                 {
                     shaderCodeBuilder.AppendLine("\n");
                     continue;
                 }
-                shaderCodeBuilder.AppendLine(modifiedLine);
+
+                string line = lines[i];
+                if (!line.StartsWith("void " + kernelName + "()"))
+                {
+                    shaderCodeBuilder.AppendLine(line);
+                    continue;
+                }
+                
+                shaderCodeBuilder.AppendLine(lines[i].Replace(kernelName, "main"));
             }
 
             string shaderCodeString = shaderCodeBuilder.ToString();

@@ -10,6 +10,7 @@ public partial class DitherEffect : AcomputeCompositorEffect
     [Export(PropertyHint.Range, "0.0, 1.0")] public float DitherStrength = 0.5f;
     [Export(PropertyHint.Range, "1, 1024")] public int NumColors = 128;
     [Export(PropertyHint.Range, "1, 10")] public int DitherSize = 2;
+    [Export] public bool UseGrayscaleDither;
     
     public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)
     {
@@ -22,7 +23,7 @@ public partial class DitherEffect : AcomputeCompositorEffect
         {
             Rid inputImage = RenderSceneBuffersRd.GetColorLayer(view);
             
-            byte[] uniformByteArray = ToByteArray([DitherStrength,NumColors,DitherSize,0]);
+            byte[] uniformByteArray = ToByteArray([DitherStrength,NumColors,DitherSize,UseGrayscaleDither ? 1 : 0]);
             
             AcomputeShaderInstance.SetTexture(0, 0, inputImage);
             AcomputeShaderInstance.SetUniformBuffer(0, 1, uniformByteArray);
