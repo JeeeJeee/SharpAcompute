@@ -9,16 +9,17 @@ public partial class ExposureEffect : AcomputeCompositorEffect
 {
     [Export] public Vector4 Exposure = new(2, 1, 1, 1);
 
-    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)
+    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData,
+        RenderSceneBuffersRD renderSceneBuffersRd)
     {
         uint xGroup = ((uint)SceneBuffersInternalSize.X - 1) / 8 + 1;
         uint yGroup = ((uint)SceneBuffersInternalSize.Y - 1) / 8 + 1;
         uint zGroup = 1;
         
         float[] screenSizePushConstant = [SceneBuffersInternalSize.X, SceneBuffersInternalSize.Y, 0.0f, 0.0f];
-        for (uint view = 0; view < RenderSceneBuffersRd.GetViewCount(); view++)
+        for (uint view = 0; view < renderSceneBuffersRd.GetViewCount(); view++)
         {
-            Rid inputImage = RenderSceneBuffersRd.GetColorLayer(view);
+            Rid inputImage = renderSceneBuffersRd.GetColorLayer(view);
             
             // Pack the exposure vector into a byte array
             byte[] uniformByteArray = ToByteArray([Exposure.X, Exposure.Y, Exposure.Z, Exposure.W]);

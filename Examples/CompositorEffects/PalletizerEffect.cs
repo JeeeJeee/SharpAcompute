@@ -33,7 +33,8 @@ public partial class PalletizerEffect : AcomputeCompositorEffect
         _paletteTextureSampler = AcomputeShaderInstance.CreateSampler(RenderingDevice.SamplerFilter.Nearest, RenderingDevice.SamplerFilter.Nearest); 
     }
     
-    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)
+    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData,
+        RenderSceneBuffersRD renderSceneBuffersRd)
     {
         uint xGroup = ((uint)SceneBuffersInternalSize.X - 1) / 8 + 1;
         uint yGroup = ((uint)SceneBuffersInternalSize.Y - 1) / 8 + 1;
@@ -47,9 +48,9 @@ public partial class PalletizerEffect : AcomputeCompositorEffect
         }
         
         float[] screenSizePushConstant = [SceneBuffersInternalSize.X, SceneBuffersInternalSize.Y, 0.0f, 0.0f];
-        for (uint view = 0; view < RenderSceneBuffersRd.GetViewCount(); view++)
+        for (uint view = 0; view < renderSceneBuffersRd.GetViewCount(); view++)
         {
-            Rid inputImage = RenderSceneBuffersRd.GetColorLayer(view);
+            Rid inputImage = renderSceneBuffersRd.GetColorLayer(view);
             
             byte[] uniformByteArray = ToByteArray([EffectStrength,0,0,0]);
             

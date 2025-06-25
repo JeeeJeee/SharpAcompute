@@ -69,10 +69,9 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
             CallDeferred(nameof(HotReloadEffect));
         }
     }
-    private AcomputeShaderResource _acomputeShaderResource;
     
+    private AcomputeShaderResource _acomputeShaderResource;
     protected Vector2I SceneBuffersInternalSize;
-    protected RenderSceneBuffersRD RenderSceneBuffersRd;
     
     public async void HotReloadEffect()
     {
@@ -109,13 +108,15 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
     /// So more complicated interactions with the scene tree might fail in the editor
     /// </summary>
     protected virtual void InitEffect() { }
-    
+
     /// <summary>
     /// Override this
     /// </summary>
     /// <param name="effectCallbackType"></param>
     /// <param name="renderData"></param>
-    public virtual void AcomputeRenderCallback(int effectCallbackType, RenderData renderData){}
+    /// <param name="renderSceneBuffersRd"></param>
+    public virtual void AcomputeRenderCallback(int effectCallbackType, RenderData renderData,
+        RenderSceneBuffersRD renderSceneBuffersRd){}
 
     /// <summary>
     /// Called when the shader resource has been re/saved in the editor.
@@ -148,21 +149,21 @@ public partial class AcomputeCompositorEffect : Godot.CompositorEffect
             return;
         }
         
-        RenderSceneBuffersRd = renderData.GetRenderSceneBuffers() as RenderSceneBuffersRD;
-        if (RenderSceneBuffersRd == null)
+        using RenderSceneBuffersRD renderSceneBuffersRd = renderData.GetRenderSceneBuffers() as RenderSceneBuffersRD;
+        if (renderSceneBuffersRd == null)
         {
             GD.PrintErr("No render scene buffers found!");
             return;
         }
         
-        SceneBuffersInternalSize = RenderSceneBuffersRd.GetInternalSize();
+        SceneBuffersInternalSize = renderSceneBuffersRd.GetInternalSize();
         if (SceneBuffersInternalSize.X == 0 || SceneBuffersInternalSize.Y == 0)
         {
             GD.PrintErr("Rendering to 0x0 buffer!");
             return;
         }
         
-        AcomputeRenderCallback(effectCallbackType, renderData);
+        AcomputeRenderCallback(effectCallbackType, renderData, renderSceneBuffersRd);
     }
     
     public static byte[] ToByteArray(float[] floatArray)

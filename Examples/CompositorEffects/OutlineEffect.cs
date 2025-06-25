@@ -22,7 +22,8 @@ public partial class OutlineEffect : AcomputeCompositorEffect
             RenderingDevice.SamplerFilter.Nearest);
     }
 
-    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)
+    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData,
+        RenderSceneBuffersRD renderSceneBuffersRd)
     {
         uint xGroup = ((uint)SceneBuffersInternalSize.X - 1) / 8 + 1;
         uint yGroup = ((uint)SceneBuffersInternalSize.Y - 1) / 8 + 1;
@@ -36,10 +37,10 @@ public partial class OutlineEffect : AcomputeCompositorEffect
             invProjection[2].W,
             invProjection[3].W];
         
-        for (uint view = 0; view < RenderSceneBuffersRd.GetViewCount(); view++)
+        for (uint view = 0; view < renderSceneBuffersRd.GetViewCount(); view++)
         {
-            Rid inputImage = RenderSceneBuffersRd.GetColorLayer(view);
-            Rid depthImage = RenderSceneBuffersRd.GetDepthLayer(view);
+            Rid inputImage = renderSceneBuffersRd.GetColorLayer(view);
+            Rid depthImage = renderSceneBuffersRd.GetDepthLayer(view);
             
             byte[] uniformByteArray = ToByteArray([OutlineThickness,DepthDistance,DepthBias,OnlyOutlines ? 1 : 0]);
             

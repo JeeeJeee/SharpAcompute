@@ -9,16 +9,17 @@ public partial class VignetteEffect : AcomputeCompositorEffect
 {
     [Export(PropertyHint.Range, "0.0, 1.0")] public float VignetteStrength = 0.5f;
 
-    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData)
+    public override void AcomputeRenderCallback(int effectCallbackType, RenderData renderData,
+        RenderSceneBuffersRD renderSceneBuffersRd)
     {
         uint xGroup = ((uint)SceneBuffersInternalSize.X - 1) / 8 + 1;
         uint yGroup = ((uint)SceneBuffersInternalSize.Y - 1) / 8 + 1;
         uint zGroup = 1;
         
         float[] screenSizePushConstant = new []{SceneBuffersInternalSize.X, SceneBuffersInternalSize.Y, 0.0f, 0.0f};
-        for (uint view = 0; view < RenderSceneBuffersRd.GetViewCount(); view++)
+        for (uint view = 0; view < renderSceneBuffersRd.GetViewCount(); view++)
         {
-            Rid inputImage = RenderSceneBuffersRd.GetColorLayer(view);
+            Rid inputImage = renderSceneBuffersRd.GetColorLayer(view);
             
             byte[] uniformByteArray = ToByteArray([VignetteStrength,0,0,0]);
             

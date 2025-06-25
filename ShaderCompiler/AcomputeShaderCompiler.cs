@@ -291,7 +291,7 @@ public partial class AcomputeShaderCompiler : Node, ISerializationListener
             }
         }
         
-        ShaderInstances.ForEach(x => x.Free());
+        ShaderInstances?.ForEach(x => x?.Free());
         
         ShaderInstances.Clear();
         _computeShaderKernelCompilations.Clear();
