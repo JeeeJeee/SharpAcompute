@@ -293,7 +293,7 @@ public partial class AcomputeShaderCompiler : Node, ISerializationListener
         
         ShaderInstances?.ForEach(x => x?.Free());
         
-        ShaderInstances.Clear();
+        ShaderInstances?.Clear();
         _computeShaderKernelCompilations.Clear();
         
         GD.Print("SharpAcompute: Compute Shaders freed.");
